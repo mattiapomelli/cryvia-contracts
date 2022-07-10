@@ -2,14 +2,10 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Quiz is Ownable {
-    ERC20 public token;
-
-    constructor(ERC20 _tokenContract) {
-        token = _tokenContract;
-    }
+    IERC20 public token;
 
     // How much a user can redeem for each quiz (quizId -> userAddress -> winAmount)
     mapping(uint256 => mapping(address => uint256)) public winBalance; // rename to redeemBalance?
@@ -28,6 +24,10 @@ contract Quiz is Ownable {
 
     // Fee kept by the the platform for every quiz subscription (expressed as a percentage)
     uint256 public platformFee = 10;
+
+    constructor(IERC20 _tokenContract) {
+        token = _tokenContract;
+    }
 
     /**
      * Create a new quiz, setting its price

@@ -10,6 +10,7 @@ const config: HardhatUserConfig = {
     mumbai: {
       url: process.env.MUMBAI_URL,
       accounts: [process.env.PRIVATE_KEY || ''],
+      chainId: 80001,
     },
   },
 }

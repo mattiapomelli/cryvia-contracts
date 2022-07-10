@@ -6,9 +6,10 @@ import { deployContract } from '../utils/contracts'
 
 async function main() {
   const accounts = await ethers.getSigners()
-  const networkName = hre.network.name
+  const { chainId } = hre.network.config
+  const { name } = hre.network
 
-  console.log('Deploying on ', networkName)
+  console.log('Deploying on', name)
   console.log('Using address: ', accounts[0].address)
 
   // Check signer balance
@@ -21,12 +22,14 @@ async function main() {
   }
 
   // Deploy quiz contract
-  console.log('Using token: ', TOKEN_ADDRESS[networkName])
+  if (!chainId) {
+    throw new Error('chainId must be specified')
+  }
 
-  const quizContract = await deployContract<Quiz>(
-    'Quiz',
-    TOKEN_ADDRESS[networkName]
-  )
+  const tokenAddress = TOKEN_ADDRESS[chainId]
+  console.log('Using token: ', tokenAddress)
+
+  const quizContract = await deployContract<Quiz>('Quiz', tokenAddress)
 
   console.log('Deployed Quiz contract at address: ', quizContract.address)
 }

@@ -1,0 +1,5 @@
+const MUMBAI_TOKEN_ADDRESS = '0x9f65240da1a3852B757bC25E9C58EC15305d549E'
+
+export const TOKEN_ADDRESS: Record<string, string> = {
+  mumbai: MUMBAI_TOKEN_ADDRESS,
+}

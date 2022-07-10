@@ -5,7 +5,8 @@
   "author": "Mattia Pomelli",
   "license": "MIT",
   "scripts": {
-    "deploy": "hardhat run scripts/deploy-local.ts"
+    "deploy:local": "hardhat run scripts/deploy-local.ts",
+    "deploy:mumbai": "hardhat run scripts/deploy.ts --network mumbai"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
@@ -22,6 +23,7 @@
     "@types/mocha": "^9.1.0",
     "@types/node": ">=12.0.0",
     "chai": "^4.2.0",
+    "dotenv": "^16.0.1",
     "ethers": "^5.4.7",
     "hardhat": "^2.9.9",
     "hardhat-gas-reporter": "^1.0.8",

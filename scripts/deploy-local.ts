@@ -8,15 +8,6 @@ async function main() {
 
   console.log('Using address: ', accounts[0].address)
 
-  // Check signer balance
-  const balanceBN = await accounts[0].getBalance()
-  const balance = Number(ethers.utils.formatEther(balanceBN))
-
-  console.log(`Wallet balance: ${balance} ETH`)
-  if (balance < 0.01) {
-    throw new Error('Not enough ether')
-  }
-
   // Deploy token contract
   const myTokenContract = await deployContract<MyToken>(
     'MyToken',

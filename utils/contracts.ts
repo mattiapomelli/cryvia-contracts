@@ -1,9 +1,15 @@
 import { Contract, ContractInterface } from 'ethers'
 import hre, { ethers } from 'hardhat'
-import { Quiz } from '../typechain-types'
-import QuizJson from '../artifacts/contracts/Quiz.sol/Quiz.json'
+import { Quiz, MyToken } from '../typechain-types'
 
-import { AddressMap, QUIZ_CONTRACT_ADDRESS } from '../constants/addresses'
+import QuizJson from '../artifacts/contracts/Quiz.sol/Quiz.json'
+import TokenJson from '../artifacts/contracts/MyToken.sol/MyToken.json'
+
+import {
+  AddressMap,
+  QUIZ_CONTRACT_ADDRESS,
+  TOKEN_ADDRESS,
+} from '../constants/addresses'
 import { getProvider } from './providers'
 
 export async function deployContract<T extends Contract>(
@@ -41,4 +47,8 @@ export function getContract<T extends Contract>(
 
 export function getQuizContract(withSigner = true) {
   return getContract<Quiz>(QUIZ_CONTRACT_ADDRESS, QuizJson.abi, withSigner)
+}
+
+export function getTokenContract(withSigner = true) {
+  return getContract<MyToken>(TOKEN_ADDRESS, TokenJson.abi, withSigner)
 }

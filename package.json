@@ -5,8 +5,12 @@
   "author": "Mattia Pomelli",
   "license": "MIT",
   "scripts": {
-    "deploy:local": "hardhat run scripts/deploy-local.ts",
-    "deploy:mumbai": "hardhat run scripts/deploy.ts --network mumbai"
+    "deploy:local": "hardhat run scripts/deploy-local.ts --network localhost",
+    "deploy:mumbai": "hardhat run scripts/deploy.ts --network mumbai",
+    "chain": "hardhat node",
+    "compile": "hardhat compile",
+    "test": "hardhat test:jest",
+    "setup": "hardhat run scripts/deploy-setup.ts --network localhost"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",

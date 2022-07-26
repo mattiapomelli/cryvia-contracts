@@ -39,20 +39,26 @@ describe('CryviaQuiz Contract', () => {
       const contractOwner = await quizContract.owner()
       expect(contractOwner).to.eq(owner.address)
     })
-
-    it('sets the correct token', async () => {
-      const token = await quizContract.token()
-      expect(token).to.eq(tokenContract.address)
-    })
   })
 
   describe('when a quiz is created', async () => {
-    it('sets the correct quiz price', async () => {
-      const tx = await quizContract.createQuiz(QUIZ_ID, QUIZ_PRICE)
+    before(async () => {
+      const tx = await quizContract.createQuiz(
+        QUIZ_ID,
+        QUIZ_PRICE,
+        tokenContract.address
+      )
       await tx.wait()
+    })
 
+    it('sets the correct quiz price', async () => {
       const price = await quizContract.getQuizPrice(QUIZ_ID)
       expect(price).to.eq(QUIZ_PRICE)
+    })
+
+    it('sets the correct quiz token', async () => {
+      const token = await quizContract.getQuizToken(QUIZ_ID)
+      expect(token).to.eq(tokenContract.address)
     })
   })
 
@@ -75,7 +81,7 @@ describe('CryviaQuiz Contract', () => {
           quizContract.address
         )
         quizBalance = await quizContract.getQuizBalance(QUIZ_ID)
-        ownerBalance = await quizContract.ownerBalance()
+        ownerBalance = await quizContract.getOwnerBalance(QUIZ_ID)
 
         // Set platform fee
         platformFeePercentage = await quizContract.platformFee()
@@ -113,7 +119,7 @@ describe('CryviaQuiz Contract', () => {
       })
 
       it('increases owner balance', async () => {
-        const updatedOwnerBalance = await quizContract.ownerBalance()
+        const updatedOwnerBalance = await quizContract.getOwnerBalance(QUIZ_ID)
         expect(updatedOwnerBalance).to.eq(ownerBalance.add(platformFee))
       })
 
@@ -133,7 +139,7 @@ describe('CryviaQuiz Contract', () => {
 
     before(async () => {
       winners = users.slice(0, NUMBER_OF_WINNERS)
-      ownerBalance = await quizContract.ownerBalance()
+      ownerBalance = await quizContract.getOwnerBalance(QUIZ_ID)
 
       // Set winners
       const tx = await quizContract.setWinners(
@@ -168,7 +174,7 @@ describe('CryviaQuiz Contract', () => {
       const extraOwnerAmount = quizBalance.sub(
         expectedWinBalance.mul(NUMBER_OF_WINNERS)
       )
-      const updatedOwnerBalance = await quizContract.ownerBalance()
+      const updatedOwnerBalance = await quizContract.getOwnerBalance(QUIZ_ID)
 
       expect(updatedOwnerBalance).to.eq(ownerBalance.add(extraOwnerAmount))
     })
@@ -227,11 +233,11 @@ describe('CryviaQuiz Contract', () => {
     before(async () => {
       // Set balances before withdraw
       ownerTokenBalance = await tokenContract.balanceOf(owner.address)
-      ownerBalance = await quizContract.ownerBalance()
+      ownerBalance = await quizContract.getOwnerBalance(QUIZ_ID)
       quizContractBalance = await tokenContract.balanceOf(quizContract.address)
 
       // Withdraw
-      const tx = await quizContract.withdraw()
+      const tx = await quizContract.withdraw(QUIZ_ID)
       await tx.wait()
     })
 
@@ -254,7 +260,7 @@ describe('CryviaQuiz Contract', () => {
     })
 
     it("resets owner's balance", async () => {
-      const updatedOwnerBalance = await quizContract.ownerBalance()
+      const updatedOwnerBalance = await quizContract.getOwnerBalance(QUIZ_ID)
       expect(updatedOwnerBalance).to.eq(BigNumber.from(0))
     })
   })

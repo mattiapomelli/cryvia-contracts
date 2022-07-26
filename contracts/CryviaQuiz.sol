@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CryviaQuiz is Ownable {
-    IERC20 public token;
-
     struct Quiz {
         // Price of the quiz
         uint128 price;
@@ -18,27 +16,34 @@ contract CryviaQuiz is Ownable {
         mapping(address => uint256) winBalance;
         // How much a user can redeem
         mapping(address => uint256) redeemBalance;
+        // Token used to pay for the quiz
+        IERC20 token;
+        // Amount withdrawable by the owner
+        uint256 ownerBalance;
     }
 
     // Existing quizzes
     mapping(uint256 => Quiz) quizzes;
 
-    // How much the owner can withdraw
-    uint256 public ownerBalance;
-
     // Fee kept by the the platform for every quiz subscription (expressed as a percentage)
     uint8 public platformFee = 10;
 
-    constructor(IERC20 _tokenContract) {
-        token = _tokenContract;
-    }
+    constructor() {}
 
     function getQuizPrice(uint256 _quizId) public view returns (uint128) {
         return quizzes[_quizId].price;
     }
 
+    function getQuizToken(uint256 _quizId) public view returns (IERC20) {
+        return quizzes[_quizId].token;
+    }
+
     function getQuizBalance(uint256 _quizId) public view returns (uint256) {
         return quizzes[_quizId].balance;
+    }
+
+    function getOwnerBalance(uint256 _quizId) public view returns (uint256) {
+        return quizzes[_quizId].ownerBalance;
     }
 
     function isSubscribed(uint256 _quizId) public view returns (bool) {
@@ -57,9 +62,15 @@ contract CryviaQuiz is Ownable {
      * Create a new quiz, setting its price
      * @param _id id of the quiz
      * @param _price price for subscribing to the quiz
+     * @param _token token used for paying the quiz fee
      */
-    function createQuiz(uint256 _id, uint128 _price) external onlyOwner {
+    function createQuiz(
+        uint256 _id,
+        uint128 _price,
+        IERC20 _token
+    ) external onlyOwner {
         quizzes[_id].price = _price;
+        quizzes[_id].token = _token;
     }
 
     /**
@@ -68,6 +79,7 @@ contract CryviaQuiz is Ownable {
      */
     function subscribe(uint256 _quizId) external {
         uint256 price = quizzes[_quizId].price;
+        IERC20 token = quizzes[_quizId].token;
 
         // TODO: check user hasn't already subscribed
 
@@ -85,7 +97,7 @@ contract CryviaQuiz is Ownable {
 
         // Update owner balance
         uint256 ownerFee = (price * platformFee) / 100;
-        ownerBalance += ownerFee;
+        quizzes[_quizId].ownerBalance += ownerFee;
 
         // Update quiz fund
         quizzes[_quizId].balance += price - ownerFee;
@@ -112,7 +124,7 @@ contract CryviaQuiz is Ownable {
         // For simplicity we give this tiny amount to the owner, since it is not possible to be shared between winners
         uint256 extraAmount = quizzes[_quizId].balance -
             (winAmount * _winners.length);
-        ownerBalance += extraAmount;
+        quizzes[_quizId].ownerBalance += extraAmount;
 
         for (uint256 i = 0; i < _winners.length; i++) {
             // Check that the winner has actually participated to the quiz
@@ -138,6 +150,8 @@ contract CryviaQuiz is Ownable {
             "There is no balance to redeem"
         );
 
+        IERC20 token = quizzes[_quizId].token;
+
         // Transfer redeem balance to user
         token.transfer(
             _msgSender(),
@@ -153,9 +167,12 @@ contract CryviaQuiz is Ownable {
     /**
      * Sends accumulated platform fees to owner
      */
-    function withdraw() external onlyOwner {
-        token.transfer(_msgSender(), ownerBalance);
-        ownerBalance = 0;
+    function withdraw(uint256 _quizId) external onlyOwner {
+        IERC20 token = quizzes[_quizId].token;
+
+        // Transfer token to owner
+        token.transfer(_msgSender(), quizzes[_quizId].ownerBalance);
+        quizzes[_quizId].ownerBalance = 0;
     }
 
     /**

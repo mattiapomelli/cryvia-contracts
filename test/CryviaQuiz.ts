@@ -63,6 +63,8 @@ describe('CryviaQuiz Contract', () => {
       let userBalance: BigNumber
       let quizBalance: BigNumber
       let ownerBalance: BigNumber
+      let platformFeePercentage: number
+      let platformFee: BigNumber
 
       before(async () => {
         user = users[i]
@@ -74,6 +76,10 @@ describe('CryviaQuiz Contract', () => {
         )
         quizBalance = await quizContract.getQuizBalance(QUIZ_ID)
         ownerBalance = await quizContract.ownerBalance()
+
+        // Set platform fee
+        platformFeePercentage = await quizContract.platformFee()
+        platformFee = QUIZ_PRICE.mul(platformFeePercentage).div(100)
 
         // Approve spending of tokens
         const approveTx = await tokenContract
@@ -101,18 +107,12 @@ describe('CryviaQuiz Contract', () => {
       })
 
       it('increases quiz balance', async () => {
-        const platformFeePercentage = await quizContract.platformFee()
-        const platformFee = QUIZ_PRICE.mul(platformFeePercentage).div(100)
-
         const updatedQuizBalance = await quizContract.getQuizBalance(QUIZ_ID)
-        const paidFee = QUIZ_PRICE.sub(platformFee)
-        expect(updatedQuizBalance).to.eq(quizBalance.add(paidFee))
+        const feePaidToQuiz = QUIZ_PRICE.sub(platformFee)
+        expect(updatedQuizBalance).to.eq(quizBalance.add(feePaidToQuiz))
       })
 
       it('increases owner balance', async () => {
-        const platformFeePercentage = await quizContract.platformFee()
-        const platformFee = QUIZ_PRICE.mul(platformFeePercentage).div(100)
-
         const updatedOwnerBalance = await quizContract.ownerBalance()
         expect(updatedOwnerBalance).to.eq(ownerBalance.add(platformFee))
       })

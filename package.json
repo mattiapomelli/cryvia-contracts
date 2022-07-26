@@ -9,7 +9,7 @@
     "deploy:mumbai": "hardhat run scripts/deploy.ts --network mumbai",
     "chain": "hardhat node",
     "compile": "hardhat compile",
-    "test": "hardhat test:jest",
+    "test": "hardhat test",
     "setup": "hardhat run scripts/deploy-setup.ts --network localhost"
   },
   "devDependencies": {

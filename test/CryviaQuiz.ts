@@ -10,6 +10,7 @@ describe('CryviaQuiz Contract', () => {
   let tokenContract: MyToken
   let owner: SignerWithAddress
   let users: SignerWithAddress[]
+  let winners: SignerWithAddress[]
 
   let NUMBER_OF_USERS = 5
   let NUMBER_OF_WINNERS = 3
@@ -126,7 +127,6 @@ describe('CryviaQuiz Contract', () => {
   }
 
   describe('when quiz winners are setted', async () => {
-    let winners: SignerWithAddress[]
     let ownerBalance: BigNumber
     let expectedWinBalance: BigNumber
     let quizBalance: BigNumber
@@ -173,4 +173,49 @@ describe('CryviaQuiz Contract', () => {
       expect(updatedOwnerBalance).to.eq(ownerBalance.add(extraOwnerAmount))
     })
   })
+
+  for (let i = 0; i < NUMBER_OF_WINNERS; i++) {
+    describe(`when user ${i} redeems its balance`, async () => {
+      let quizContractBalance: BigNumber
+      let user: SignerWithAddress
+      let userBalance: BigNumber
+      let redeemBalance: BigNumber
+
+      before(async () => {
+        user = winners[i]
+
+        // Set balances before redeem
+        userBalance = await tokenContract.balanceOf(user.address)
+        quizContractBalance = await tokenContract.balanceOf(
+          quizContract.address
+        )
+        redeemBalance = await quizContract.connect(user).redeemBalance(QUIZ_ID)
+
+        // Redeem balance
+        const subscribeTx = await quizContract.connect(user).redeem(QUIZ_ID)
+        await subscribeTx.wait()
+      })
+
+      it("increases user's token balance", async () => {
+        const updatedUserBalance = await tokenContract.balanceOf(user.address)
+        expect(updatedUserBalance).to.eq(userBalance.add(redeemBalance))
+      })
+
+      it('decreases quiz contract token balance', async () => {
+        const updatedQuizContractBalance = await tokenContract.balanceOf(
+          quizContract.address
+        )
+        expect(updatedQuizContractBalance).to.eq(
+          quizContractBalance.sub(redeemBalance)
+        )
+      })
+
+      it("resets user's redeem balance", async () => {
+        const updatedRedeemBalance = await quizContract
+          .connect(user)
+          .redeemBalance(QUIZ_ID)
+        expect(updatedRedeemBalance).to.eq(BigNumber.from(0))
+      })
+    })
+  }
 })

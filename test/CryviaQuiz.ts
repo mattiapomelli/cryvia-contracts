@@ -12,6 +12,7 @@ describe('CryviaQuiz Contract', () => {
   let users: SignerWithAddress[]
 
   let NUMBER_OF_USERS = 5
+  let NUMBER_OF_WINNERS = 3
 
   const QUIZ_ID = 1
   const QUIZ_PRICE = ethers.utils.parseEther('5')
@@ -84,12 +85,12 @@ describe('CryviaQuiz Contract', () => {
         await subscribeTx.wait()
       })
 
-      it("should decrease user's token balance", async () => {
+      it("decreases user's token balance", async () => {
         const updatedUserBalance = await tokenContract.balanceOf(user.address)
         expect(updatedUserBalance).to.eq(userBalance.sub(QUIZ_PRICE))
       })
 
-      it('should increase quiz contract token balance', async () => {
+      it('increases quiz contract token balance', async () => {
         const updatedQuizContractBalance = await tokenContract.balanceOf(
           quizContract.address
         )
@@ -98,7 +99,7 @@ describe('CryviaQuiz Contract', () => {
         )
       })
 
-      it('should increase quiz balance', async () => {
+      it('increases quiz balance', async () => {
         const platformFeePercentage = await quizContract.platformFee()
         const platformFee = QUIZ_PRICE.mul(platformFeePercentage).div(100)
 
@@ -107,7 +108,7 @@ describe('CryviaQuiz Contract', () => {
         expect(updatedQuizBalance).to.eq(quizBalance.add(paidFee))
       })
 
-      it('should increase owner balance', async () => {
+      it('increases owner balance', async () => {
         const platformFeePercentage = await quizContract.platformFee()
         const platformFee = QUIZ_PRICE.mul(platformFeePercentage).div(100)
 
@@ -115,7 +116,7 @@ describe('CryviaQuiz Contract', () => {
         expect(updatedOwnerBalance).to.eq(ownerBalance.add(platformFee))
       })
 
-      it('should update quiz subscriptions', async () => {
+      it('updates quiz subscriptions', async () => {
         const isSubscribed = await quizContract
           .connect(user)
           .isSubscribed(QUIZ_ID)
@@ -123,4 +124,53 @@ describe('CryviaQuiz Contract', () => {
       })
     })
   }
+
+  describe('when quiz winners are setted', async () => {
+    let winners: SignerWithAddress[]
+    let ownerBalance: BigNumber
+    let expectedWinBalance: BigNumber
+    let quizBalance: BigNumber
+
+    before(async () => {
+      winners = users.slice(0, NUMBER_OF_WINNERS)
+      ownerBalance = await quizContract.ownerBalance()
+
+      // Set winners
+      const tx = await quizContract.setWinners(
+        QUIZ_ID,
+        winners.map((winner) => winner.address)
+      )
+      tx.wait()
+    })
+
+    it("increases winner's win balance", async () => {
+      quizBalance = await quizContract.getQuizBalance(QUIZ_ID)
+      expectedWinBalance = quizBalance.div(NUMBER_OF_WINNERS) // Will truncate if result is not integer
+
+      for (const winner of winners) {
+        const winBalance = await quizContract
+          .connect(winner)
+          .winBalance(QUIZ_ID)
+        expect(winBalance).to.eq(expectedWinBalance)
+      }
+    })
+
+    it("increases winner's redeem balance", async () => {
+      for (const winner of winners) {
+        const redeemBalance = await quizContract
+          .connect(winner)
+          .redeemBalance(QUIZ_ID)
+        expect(redeemBalance).to.eq(expectedWinBalance)
+      }
+    })
+
+    it('increases owner balance by extra amount', async () => {
+      const extraOwnerAmount = quizBalance.sub(
+        expectedWinBalance.mul(NUMBER_OF_WINNERS)
+      )
+      const updatedOwnerBalance = await quizContract.ownerBalance()
+
+      expect(updatedOwnerBalance).to.eq(ownerBalance.add(extraOwnerAmount))
+    })
+  })
 })

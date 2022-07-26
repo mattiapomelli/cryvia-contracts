@@ -121,8 +121,9 @@ contract CryviaQuiz is Ownable {
                 "Winner must be a participant of the quiz"
             );
 
-            // Update winner's win balance
+            // Update winner's win balance and redeem balance
             quizzes[_quizId].winBalance[_winners[i]] = winAmount;
+            quizzes[_quizId].redeemBalance[_winners[i]] = winAmount;
         }
     }
 
@@ -133,17 +134,20 @@ contract CryviaQuiz is Ownable {
     function redeem(uint256 _quizId) external {
         // Check user has a win balance to redeem
         require(
-            quizzes[_quizId].winBalance[_msgSender()] > 0,
-            "There is no win balance to redeem"
+            quizzes[_quizId].redeemBalance[_msgSender()] > 0,
+            "There is no balance to redeem"
         );
 
-        // Transfer win balance to user
-        token.transfer(_msgSender(), quizzes[_quizId].winBalance[_msgSender()]);
+        // Transfer redeem balance to user
+        token.transfer(
+            _msgSender(),
+            quizzes[_quizId].redeemBalance[_msgSender()]
+        );
 
         // TODO: update quiz Fund?
 
-        // Reset user's win balance
-        quizzes[_quizId].winBalance[_msgSender()] = 0;
+        // Reset user's redeem balance
+        quizzes[_quizId].redeemBalance[_msgSender()] = 0;
     }
 
     /**

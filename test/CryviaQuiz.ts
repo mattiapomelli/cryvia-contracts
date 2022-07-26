@@ -218,4 +218,44 @@ describe('CryviaQuiz Contract', () => {
       })
     })
   }
+
+  describe('when the owner withdraws its balance', async () => {
+    let ownerTokenBalance: BigNumber
+    let ownerBalance: BigNumber
+    let quizContractBalance: BigNumber
+
+    before(async () => {
+      // Set balances before withdraw
+      ownerTokenBalance = await tokenContract.balanceOf(owner.address)
+      ownerBalance = await quizContract.ownerBalance()
+      quizContractBalance = await tokenContract.balanceOf(quizContract.address)
+
+      // Withdraw
+      const tx = await quizContract.withdraw()
+      await tx.wait()
+    })
+
+    it("increases user's token balance", async () => {
+      const updatedOwnerTokenBalance = await tokenContract.balanceOf(
+        owner.address
+      )
+      expect(updatedOwnerTokenBalance).to.eq(
+        ownerTokenBalance.add(ownerBalance)
+      )
+    })
+
+    it('decreases quiz contract token balance', async () => {
+      const updatedQuizContractBalance = await tokenContract.balanceOf(
+        quizContract.address
+      )
+      expect(updatedQuizContractBalance).to.eq(
+        quizContractBalance.sub(ownerBalance)
+      )
+    })
+
+    it("resets owner's balance", async () => {
+      const updatedOwnerBalance = await quizContract.ownerBalance()
+      expect(updatedOwnerBalance).to.eq(BigNumber.from(0))
+    })
+  })
 })

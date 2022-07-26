@@ -12,8 +12,9 @@ describe('CryviaQuiz Contract', () => {
   let users: SignerWithAddress[]
   let winners: SignerWithAddress[]
 
-  let NUMBER_OF_USERS = 5
-  let NUMBER_OF_WINNERS = 3
+  const NUMBER_OF_USERS = 5
+  const NUMBER_OF_WINNERS = 3
+  const PLATFORM_FEE = 10
 
   const QUIZ_ID = 1
   const QUIZ_PRICE = ethers.utils.parseEther('5')
@@ -28,16 +29,18 @@ describe('CryviaQuiz Contract', () => {
       users.map((user) => user.address)
     )
 
-    quizContract = await deployContract<CryviaQuiz>(
-      'CryviaQuiz',
-      tokenContract.address
-    )
+    quizContract = await deployContract<CryviaQuiz>('CryviaQuiz', PLATFORM_FEE)
   })
 
   describe('when the contract is deployed', async () => {
     it('sets the deployer as the owner', async () => {
       const contractOwner = await quizContract.owner()
       expect(contractOwner).to.eq(owner.address)
+    })
+
+    it('sets the correct platform fee', async () => {
+      const platformFee = await quizContract.platformFee()
+      expect(platformFee).to.eq(PLATFORM_FEE)
     })
   })
 

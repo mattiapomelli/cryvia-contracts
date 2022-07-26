@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CryviaQuiz is Ownable {
+    // Fee kept by the the platform for every quiz subscription (expressed as a percentage)
+    uint8 public platformFee;
+
     struct Quiz {
         // Price of the quiz
         uint128 price;
@@ -25,10 +28,9 @@ contract CryviaQuiz is Ownable {
     // Existing quizzes
     mapping(uint256 => Quiz) quizzes;
 
-    // Fee kept by the the platform for every quiz subscription (expressed as a percentage)
-    uint8 public platformFee = 10;
-
-    constructor() {}
+    constructor(uint8 _platformFee) {
+        platformFee = _platformFee;
+    }
 
     function getQuizPrice(uint256 _quizId) public view returns (uint128) {
         return quizzes[_quizId].price;
